@@ -42,3 +42,9 @@ jobs:
 
       - name: Run lint checks
         run: staticcheck ./...
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@v2.28.0
+
+      - name: Run security checks
+        run: gosec ./...
