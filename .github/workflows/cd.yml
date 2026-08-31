@@ -9,8 +9,10 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
 
-    # Referenced so the runner receives the value and redacts it from logs.
     env:
+      # Read by scripts/migrateup.sh, which finds no .env file on the runner.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Unused: referenced so the runner receives the value and redacts it from logs.
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
     steps:
@@ -21,6 +23,9 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: "1.26.0"
+
+      - name: Install goose
+        run: go install github.com/pressly/goose/v3/cmd/goose@v3.27.3
 
       - name: Build
         run: ./scripts/buildprod.sh
@@ -35,6 +40,9 @@ jobs:
 
       - name: Build and push Docker image
         run: gcloud builds submit --tag "${{ secrets.GAR_IMAGE }}" .
+
+      - name: Run database migrations
+        run: ./scripts/migrateup.sh
 
       - name: Deploy to Cloud Run
         run: gcloud run deploy notely --image "${{ secrets.GAR_IMAGE }}" --region us-central1 --allow-unauthenticated --project "${{ secrets.GCP_PROJECT_ID }}" --max-instances=4
