@@ -35,3 +35,6 @@ jobs:
 
       - name: Build and push Docker image
         run: gcloud builds submit --tag "${{ secrets.GAR_IMAGE }}" .
+
+      - name: Deploy to Cloud Run
+        run: gcloud run deploy notely --image "${{ secrets.GAR_IMAGE }}" --region us-central1 --allow-unauthenticated --project "${{ secrets.GCP_PROJECT_ID }}" --max-instances=4
